@@ -21,4 +21,8 @@ public class UserController {
         userService.register(dto);
         return ResponseEntity.ok("회원가입 완료");
     }
+    @PostMapping("/logout")
+    public void logout(){
+
+    }
 }

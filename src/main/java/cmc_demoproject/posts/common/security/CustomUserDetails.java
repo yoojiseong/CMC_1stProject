@@ -18,7 +18,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override // 사용자에게 권한 부여
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority(user.getRole()));
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole()));
     }
     public Long getUserId(){
         return user.getUser_id();

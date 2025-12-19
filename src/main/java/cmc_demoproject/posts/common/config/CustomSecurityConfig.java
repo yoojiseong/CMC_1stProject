@@ -5,6 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -51,6 +52,8 @@ public class CustomSecurityConfig {
 
                         // 2. 회원가입 및 로그인 API는 인증 없이 접근 가능하도록 설정 (중요)
                         .requestMatchers("/api/auth/signup", "/api/auth/login", "/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/categories").hasAnyRole("ADMIN","USER")
 
                         // 3. 정적 리소스 허용
                         .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
@@ -65,7 +68,15 @@ public class CustomSecurityConfig {
                         .passwordParameter("password")
                         .defaultSuccessUrl("/swagger-ui/index.html", true)
                         .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/api/auth/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .permitAll()
                 );
+        ;
 
         return http.build();
     }
