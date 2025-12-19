@@ -27,6 +27,11 @@ public class Posts {
     @JsonBackReference
     private Users users;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    @JsonBackReference
+    private Categories categories;
+
     @OneToMany(mappedBy = "posts" , cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comments> comments = new ArrayList<>();
 
@@ -43,6 +48,15 @@ public class Posts {
         this.users = users;
         if(users != null && !users.getPosts().contains(this)){
             users.getPosts().add(this);
+        }
+    }
+    public void setCategories(Categories categories){
+        if(this.categories != null){
+            this.categories.getPosts().remove(this);
+        }
+        this.categories = categories;
+        if(categories != null && !categories.getPosts().contains(this)){
+            categories.getPosts().add(this);
         }
     }
 

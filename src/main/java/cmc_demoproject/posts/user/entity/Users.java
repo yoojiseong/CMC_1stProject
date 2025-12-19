@@ -44,11 +44,9 @@ public class Users {
         posts.setUsers(this);
     }
     public void addComments(Comments comments){
-        this.comments.add(comments);
         comments.setUsers(this);
     }
     public void addBookmarks(Bookmarks bookmarks){
-        this.bookmarks.add(bookmarks);
         bookmarks.setUsers(this);
     }
 

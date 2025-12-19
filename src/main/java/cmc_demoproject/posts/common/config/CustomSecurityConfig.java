@@ -59,8 +59,10 @@ public class CustomSecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        // .loginPage("/login") // 리디렉션 루프 방지를 위해 일단 주석 처리
+                        //.loginPage("/login") // 리디렉션 루프 방지를 위해 일단 주석 처리
                         .loginProcessingUrl("/api/auth/login")
+                        .usernameParameter("email")
+                        .passwordParameter("password")
                         .defaultSuccessUrl("/swagger-ui/index.html", true)
                         .permitAll()
                 );
