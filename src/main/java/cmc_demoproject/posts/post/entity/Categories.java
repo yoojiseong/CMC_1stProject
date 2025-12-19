@@ -21,6 +21,8 @@ public class Categories {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long category_id;
+
+    @Builder.Default
     @OneToMany(mappedBy = "categories" , cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Posts> posts = new ArrayList<>();
 

@@ -34,9 +34,11 @@ public class Posts {
     @JsonBackReference
     private Categories categories;
 
+    @Builder.Default
     @OneToMany(mappedBy = "posts" , cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comments> comments = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "posts" , cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Bookmarks> bookmarks = new ArrayList<>();
 

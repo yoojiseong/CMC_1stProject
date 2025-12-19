@@ -29,14 +29,16 @@ public class PostServiceTests {
 
     @Test
     public void addPost(){
-        Optional<Users> user = usersRepository.findByEmail("test2@naver.com");
-        Optional<Categories> category = categoryRepository.findByCategoryName("정치");
+        Long a = 2L;
+        Users users = usersRepository.findByUser_id(a);
+        Categories category = categoryRepository.findByCategoryName("정치");
+        log.info(users.getUserName()+ category.getCategoryName());
         Posts post = Posts.builder()
                 .title("테스트용")
                 .content("테스트용 입니다.")
                 .build();
-        post.setUsers(user.get());
-        post.setCategories(category.get());
+        post.setUsers(users);
+        post.setCategories(category);
         postRepository.save(post);
     }
 }
