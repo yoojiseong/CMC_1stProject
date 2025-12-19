@@ -24,7 +24,7 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
 
         // 관리자 계정이 이미 존재하는지 확인
-        if (!usersRepository.existsByMemberId("admin@naver.com")) {
+        if (!usersRepository.existsByEmail("admin@naver.com")) {
             String encodedPassword = passwordEncoder.encode("admin1234");
             Users user = Users.builder()
                     .email("admin@naver.com")
