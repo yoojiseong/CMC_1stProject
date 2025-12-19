@@ -9,6 +9,35 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.4'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
+}
+jacoco {
+    toolVersion = "0.8.11" // JaCoCo 버전 설정
+}
+
+// 테스트 작업 설정
+tasks.named('test') {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport // test 작업이 끝나면 자동으로 jacocoTestReport 실행
+}
+jacocoTestReport {
+    dependsOn test // 리포트를 만들기 전 테스트가 선행되어야 함
+    reports {
+        xml.required = true
+        csv.required = false
+        html.required = true // 사람이 보기 편한 HTML 리포트 생성 활성화
+    }
+    // 리포트에서 제외할 클래스 (Querydsl 생성 파일 등)
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    "**/Q*", // Querydsl 관련 파일 제외
+                    "**/*Application*",
+                    "**/*DTO*",
+                    "**/*EntityConfig*"
+            ])
+        }))
+    }
 }
 
 group = 'CMC_demoProject'

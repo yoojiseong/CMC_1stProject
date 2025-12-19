@@ -20,7 +20,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public List<CategoryResponseDTO> getAllCategories() {
         return categoryRepository.findAll().stream()
-                .map(category -> new CategoryResponseDTO(category.getCategory_id(),category.getCategoryName()))
+                .map(category -> new CategoryResponseDTO(category.getCategoryId(),category.getCategoryName()))
                 .collect(Collectors.toList());
     }
 

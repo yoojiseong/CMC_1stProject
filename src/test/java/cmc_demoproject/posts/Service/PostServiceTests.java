@@ -30,7 +30,7 @@ public class PostServiceTests {
     @Test
     public void addPost(){
         Long a = 2L;
-        Users users = usersRepository.findByUser_id(a);
+        Users users = usersRepository.findByUserId(a);
         Categories category = categoryRepository.findByCategoryName("정치");
         log.info(users.getUserName()+ category.getCategoryName());
         Posts post = Posts.builder()

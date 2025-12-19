@@ -25,7 +25,7 @@ public class PostServiceImpl implements PostService{
         List<Posts> posts;
         if(categoryName != null && !categoryName.isBlank()){
             log.info(categoryName + "을(를) 찾았습니다!");
-            posts = postRepository.findByCategoryName(categoryName);
+            posts = postRepository.findByCategories_CategoryName(categoryName);
         }
         else{
             log.info(categoryName + "을(를) 찾지 못했습니다. 전체 조회중...");
@@ -33,12 +33,12 @@ public class PostServiceImpl implements PostService{
         }
         return posts.stream()
                 .map(post -> PostResponseDTO.builder()
-                        .post_id(post.getPost_id())
+                        .post_id(post.getPostId())
                         .title(post.getTitle())
                         .category(post.getCategories().getCategoryName())
                         .content(post.getContent())
                         .writer(UserResponseDTO.builder()
-                                .userId(post.getUsers().getUser_id())
+                                .userId(post.getUsers().getUserId())
                                 .userName(post.getUsers().getUserName())
                                 .build())
                         .build())

@@ -17,7 +17,8 @@ import lombok.NoArgsConstructor;
 public class Bookmarks {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long bookmark_id;
+    @Column(name = "bookmark_id")
+    private Long bookmarkId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

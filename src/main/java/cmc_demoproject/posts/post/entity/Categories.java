@@ -20,7 +20,8 @@ import java.util.List;
 public class Categories {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long category_id;
+    @Column(name = "category_id")
+    private Long categoryId;
 
     @Builder.Default
     @OneToMany(mappedBy = "categories" , cascade = CascadeType.ALL, orphanRemoval = true)

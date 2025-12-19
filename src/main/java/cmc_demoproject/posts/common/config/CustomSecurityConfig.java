@@ -1,5 +1,6 @@
 package cmc_demoproject.posts.common.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -45,6 +46,7 @@ public class CustomSecurityConfig {
                 .csrf(csrf -> csrf.disable()) // POST 요청을 위해 반드시 disable
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .sessionFixation().migrateSession()
                 )
                 .authorizeHttpRequests(auth -> auth
                         // 1. Swagger 관련 모든 리소스 허용
@@ -52,8 +54,8 @@ public class CustomSecurityConfig {
 
                         // 2. 회원가입 및 로그인 API는 인증 없이 접근 가능하도록 설정 (중요)
                         .requestMatchers("/api/auth/signup", "/api/auth/login", "/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/categories").hasAnyRole("ADMIN","USER")
+                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAnyRole("ADMIN","USER")
 
                         // 3. 정적 리소스 허용
                         .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
@@ -61,8 +63,9 @@ public class CustomSecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
+
                 .formLogin(form -> form
-                        //.loginPage("/login") // 리디렉션 루프 방지를 위해 일단 주석 처리
+                        //.loginPage("/api/auth/login") // 리디렉션 루프 방지를 위해 일단 주석 처리
                         .loginProcessingUrl("/api/auth/login")
                         .usernameParameter("email")
                         .passwordParameter("password")

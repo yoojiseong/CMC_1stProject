@@ -22,7 +22,8 @@ public class Users {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long user_id;
+    @Column(name = "user_id")
+    private Long userId;
 
     @Builder.Default
     @OneToMany(mappedBy = "users" , cascade = CascadeType.ALL, orphanRemoval = true)
