@@ -1,5 +1,7 @@
 package cmc_demoproject.posts.Service;
 
+import cmc_demoproject.posts.common.security.CustomUserDetails;
+import cmc_demoproject.posts.post.dto.PostRequestDTO;
 import cmc_demoproject.posts.post.dto.PostResponseDTO;
 import cmc_demoproject.posts.post.entity.Categories;
 import cmc_demoproject.posts.post.entity.Posts;
@@ -86,5 +88,26 @@ public class PostServiceTests {
     public void detailPost(){
         PostResponseDTO response = postService.detailPost(12L);
         log.info("게시물 상세 조회 테스트" + response.getTitle() + response.getContent() + response.getWriter().getUserName());
+    }
+
+    @Test
+    public void changePost(){
+        Users user = usersRepository.findById(2L).orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다. _PostServiceTests"));
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+        PostRequestDTO dto = PostRequestDTO.builder()
+                .title("게시물 수정 테스트 _ 지식 In")
+                .content("게시물 수정 테스트 코드 입니다. _ 지식 In")
+                .category("지식In")
+                .build();
+        postService.editPost(12L , userDetails , dto);
+        Posts post = postRepository.findById(12L).orElseThrow(() -> new EntityNotFoundException("게시물을 찾을 수 없습니다._PostServiceTests"));
+        log.info(post.getTitle() , post.getContent());
+    }
+
+    @Test
+    public void removePost(){
+        Users user = usersRepository.findById(2L).orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다. _PostServiceTests"));
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+        postService.removePost(1L , userDetails);
     }
 }

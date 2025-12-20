@@ -11,4 +11,6 @@ public interface PostService {
     public List<PostResponseDTO> getPostList(String categoryName);
     public void addPost(PostRequestDTO dto , CustomUserDetails userDetails);
     public PostResponseDTO detailPost(Long postId);
+    public void editPost(Long postId, CustomUserDetails userDetails, PostRequestDTO dto);
+    public void removePost(Long postId , CustomUserDetails userDetails);
 }

@@ -8,7 +8,9 @@ import cmc_demoproject.posts.user.dto.RegistMemberDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,5 +48,28 @@ public class PostsController {
         PostResponseDTO response = postService.detailPost(postId);
         return ResponseEntity.ok(response);
     }
+    @PutMapping("/{postId}")
+    public ResponseEntity<String> detailPost(@PathVariable("postId") Long postId,
+                                                      @AuthenticationPrincipal CustomUserDetails userDetails
+                                                    , @Valid @RequestBody PostRequestDTO dto){
+        try {
+            postService.editPost(postId, userDetails, dto);
+            return ResponseEntity.ok("게시글이 수정되었습니다.");
+        }
+        catch(AccessDeniedException e){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
 
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<String> detailPost(@PathVariable("postId") Long postId,
+                                             @AuthenticationPrincipal CustomUserDetails userDetails){
+        try{
+            postService.removePost(postId , userDetails);
+            return ResponseEntity.ok("게시글이 삭제되었습니다.");
+        }
+        catch(AccessDeniedException e){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
 }

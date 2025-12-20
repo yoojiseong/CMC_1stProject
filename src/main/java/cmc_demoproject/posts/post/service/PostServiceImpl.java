@@ -13,6 +13,7 @@ import cmc_demoproject.posts.user.repository.UsersRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -91,5 +92,46 @@ public class PostServiceImpl implements PostService{
                         .userId(post.getUsers().getUserId())
                         .build())
                 .build();
+    }
+
+    @Override
+    public void editPost(Long postId, CustomUserDetails userDetails, PostRequestDTO dto) {
+        Posts post = postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다."));
+        if(!post.getUsers().getUserId().equals(userDetails.getUserId())){
+            throw new AccessDeniedException("작성자만 수정할 수 있습니다");
+        }
+        if(post.getCategories().getCategoryName() != dto.getCategory())
+        {
+            Categories newCategory;
+            log.info("기존 게시글 카테고리 : "+post.getCategories().getCategoryName());
+            log.info("바뀐 게시글 카테고리 : " + dto.getCategory());
+            if(!categoryRepository.existsByCategoryName(dto.getCategory())) {
+                log.info(dto.getCategory() + "이(가) DB에 없습니다 새로 생성중...");
+                newCategory = Categories.builder()
+                        .categoryName(dto.getCategory())
+                        .build();
+                categoryRepository.save(newCategory);
+                log.info(dto.getCategory() + "이(가) DB에 저장되었습니다.");
+            }
+            log.info("게시글 수정중..");
+            newCategory = categoryRepository.findByCategoryName(dto.getCategory());
+            post.change(dto.getTitle(), dto.getContent());
+            post.setCategories(newCategory);
+        }
+        else {
+            post.change(dto.getTitle(), dto.getContent());
+        }
+    }
+
+    @Override
+    public void removePost(Long postId, CustomUserDetails userDetails) {
+        Posts post = postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다."));
+        if(!post.getUsers().getUserId().equals(userDetails.getUserId())){
+            throw new AccessDeniedException("작성자만 삭제할 수 있습니다");
+        }
+        postRepository.delete(post);
+        log.info("게시글 " + post.getPostId() + "가 삭제되었습니다.");
     }
 }

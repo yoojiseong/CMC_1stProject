@@ -74,4 +74,8 @@ public class Posts {
         this.bookmarks.add(bookmarks);
         bookmarks.setPosts(this);
     }
+    public void change(String title, String content){
+        this.title = title;
+        this.content = content;
+    }
 }

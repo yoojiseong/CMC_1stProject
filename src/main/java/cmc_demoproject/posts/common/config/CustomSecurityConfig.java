@@ -53,6 +53,7 @@ public class CustomSecurityConfig {
                         .requestMatchers("/api/auth/signup", "/api/auth/login").permitAll() // 로그인/회원가입 허용
                         .requestMatchers(HttpMethod.GET, "/api/categories/**","/api/posts/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/categories/**","/api/posts/**").hasAnyRole("ADMIN","USER")
+                        .requestMatchers(HttpMethod.PUT, "/api/categories/**","/api/posts/**").hasAnyRole("ADMIN","USER")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
