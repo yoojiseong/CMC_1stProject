@@ -108,6 +108,6 @@ public class PostServiceTests {
     public void removePost(){
         Users user = usersRepository.findById(2L).orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다. _PostServiceTests"));
         CustomUserDetails userDetails = new CustomUserDetails(user);
-        postService.removePost(1L , userDetails);
+        postService.removePost(27L , userDetails);
     }
 }

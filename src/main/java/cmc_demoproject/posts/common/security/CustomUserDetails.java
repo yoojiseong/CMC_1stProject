@@ -56,5 +56,17 @@ public class CustomUserDetails implements UserDetails {
         return true;
     }
 
+    private CustomUserDetails getAdminDetails() {
+        // 1. 테스트용 관리자 엔티티 생성
+        Users admin = Users.builder()
+                .email("admin@test.com")
+                .userName("관리자")
+                .role("ADMIN")
+                .password("admin1234")
+                .build();
+
+        // 2. CustomUserDetails로 감싸서 반환
+        return new CustomUserDetails(admin);
+    }
 
 }
