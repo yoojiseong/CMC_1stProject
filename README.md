@@ -10,6 +10,8 @@
 <img width="1486" height="805" alt="image" src="https://github.com/user-attachments/assets/26fa46c6-1ec9-46cb-8cde-30c1391d36ea" />
 # removepost => 접근 권한( 게시물 작성자) , 게시물 삭제 테스트 코드
 <img width="1105" height="595" alt="image" src="https://github.com/user-attachments/assets/f85b3a1e-3f00-43d6-9270-b4f52bf7db9a" />
+"# SPOCK을 이용한 유닛 테스트"
+<img width="1767" height="795" alt="image" src="https://github.com/user-attachments/assets/27abbf16-73e4-4c1b-8628-41ab8a7ecd84" />
 
 
 
