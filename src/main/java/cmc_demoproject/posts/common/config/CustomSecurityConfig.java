@@ -43,43 +43,36 @@ public class CustomSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable()) // POST 요청을 위해 반드시 disable
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                        .sessionFixation().migrateSession()
+                        .sessionFixation().migrateSession() // 세션 고정 보호 유지
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // 1. Swagger 관련 모든 리소스 허용
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
-
-                        // 2. 회원가입 및 로그인 API는 인증 없이 접근 가능하도록 설정 (중요)
-                        .requestMatchers("/api/auth/signup", "/api/auth/login", "/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasAnyRole("ADMIN","USER")
-
-                        // 3. 정적 리소스 허용
-                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
-
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/auth/signup", "/api/auth/login").permitAll() // 로그인/회원가입 허용
+                        .requestMatchers(HttpMethod.GET, "/api/categories/**","/api/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/categories/**","/api/posts/**").hasAnyRole("ADMIN","USER")
                         .anyRequest().authenticated()
                 )
-
                 .formLogin(form -> form
-                        //.loginPage("/api/auth/login") // 리디렉션 루프 방지를 위해 일단 주석 처리
-                        .loginProcessingUrl("/api/auth/login")
+                        //.loginPage("/api/auth/login")        // 1. 인증 안되면 이 경로로 이동
+                        .loginProcessingUrl("/api/auth/login") // 2. POST 로그인 처리
                         .usernameParameter("email")
                         .passwordParameter("password")
+                        // 3. 로그인 성공 시 무조건 Swagger로 이동 (alwaysUse=true)
                         .defaultSuccessUrl("/swagger-ui/index.html", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout")
-                        .logoutSuccessUrl("/login?logout")
+                        // 4. 로그아웃 후 다시 로그인 안내 페이지로 이동
+                        .logoutSuccessUrl("/api/auth/login")
                         .invalidateHttpSession(true)
+                        .clearAuthentication(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()
                 );
-        ;
 
         return http.build();
     }

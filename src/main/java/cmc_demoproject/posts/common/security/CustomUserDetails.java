@@ -29,6 +29,8 @@ public class CustomUserDetails implements UserDetails {
         return user.getPassword();
     }
 
+    public String getEmail(){ return user.getEmail(); }
+
     @Override
     public String getUsername() {
         return user.getUserName(); // 로그인에 사용하는 아이디 필드
