@@ -51,9 +51,15 @@ public class CustomSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                         .requestMatchers("/api/auth/signup", "/api/auth/login").permitAll() // 로그인/회원가입 허용
-                        .requestMatchers(HttpMethod.GET, "/api/categories/**","/api/posts/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/categories/**","/api/posts/**").hasAnyRole("ADMIN","USER")
-                        .requestMatchers(HttpMethod.PUT, "/api/categories/**","/api/posts/**").hasAnyRole("ADMIN","USER")
+                        // GET 요청은 모두 허용 (게시글 조회, 댓글 조회 등)
+                        .requestMatchers(HttpMethod.GET, "/api/categories/**", "/api/posts/**").permitAll()
+
+                        // 댓글 작성 경로를 명시적으로 추가 (기존 posts/** 가 커버하지만, 명확성을 위해)
+                        .requestMatchers(HttpMethod.POST, "/api/posts/*/comments").hasAnyRole("ADMIN", "USER")
+
+                        // 게시글 및 카테고리 생성/수정
+                        .requestMatchers(HttpMethod.POST, "/api/categories/**", "/api/posts/**").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.PUT, "/api/categories/**", "/api/posts/**","/api/posts/*/comments").hasAnyRole("ADMIN", "USER")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

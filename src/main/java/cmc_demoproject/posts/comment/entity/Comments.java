@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import cmc_demoproject.posts.post.entity.Posts;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -13,6 +14,7 @@ import java.util.List;
 
 @Entity
 @Getter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class Comments {
@@ -38,6 +40,8 @@ public class Comments {
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private List<Comments> children = new ArrayList<>(); // 자식 댓글(대댓글)
 
+    private String content;
+
     public void setUsers(Users users){
         if (this.users != null) {
             this.users.getComments().remove(this);
@@ -56,5 +60,15 @@ public class Comments {
         if (posts != null && !posts.getComments().contains(this)) {
             posts.getComments().add(this);
         }
+    }
+    public void setParent(Comments parent) {
+        this.parent = parent;
+        // 부모 댓글의 자식 리스트에 나(대댓글)를 추가하여 객체 상태를 동기화
+        if (parent != null && !parent.getChildren().contains(this)) {
+            parent.getChildren().add(this);
+        }
+    }
+    public void change(String content){
+        this.content = content;
     }
 }
