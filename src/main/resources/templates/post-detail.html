@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${post.title}">게시글 상세</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .reply-section { margin-left: 3rem; border-left: 2px solid #dee2e6; padding-left: 1rem; background-color: #f8f9fa; border-radius: 0 0.5rem 0.5rem 0; }
+        .comment-card { margin-bottom: 1rem; border: none; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" th:href="@{/view/board}">CMC Board</a>
+        <div class="navbar-nav ms-auto">
+      <span class="nav-link text-light" sec:authorize="isAuthenticated()">
+          반갑습니다, <span sec:authentication="name">사용자</span>님!
+      </span>
+            <a class="nav-link" th:href="@{/api/auth/logout}" sec:authorize="isAuthenticated()">로그아웃</a>
+            <a class="nav-link" th:href="@{/api/auth/login}" sec:authorize="isAnonymous()">로그인</a>
+        </div>
+    </div>
+</nav>
+<div class="container mt-5 mb-5">
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <h3 id="displayTitle" th:text="${post.title}">게시글 제목</h3>
+            <input type="text" id="editTitle" class="form-control d-none" th:value="${post.title}">
+
+            <div class="text-muted">
+                작성자: <span th:text="${post.writer.userName}">작성자</span> |
+                카테고리:
+                <span id="displayCategory" th:text="${post.category}">카테고리</span>
+
+                <select id="editCategory" class="form-select d-inline-block w-auto d-none">
+                    <option th:each="cat : ${categories}"
+                            th:value="${cat.category_name}"
+                            th:text="${cat.category_name}"
+                            th:selected="${cat.category_name == post.category}">
+                    </option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body">
+            <p id="displayContent" th:text="${post.content}" style="white-space: pre-wrap;">내용</p>
+            <textarea id="editContent" class="form-control d-none" rows="10" th:text="${post.content}"></textarea>
+        </div>
+
+        <div class="card-footer d-flex justify-content-end gap-2">
+            <a th:href="@{/view/board}" class="btn btn-secondary">목록으로</a>
+
+            <th:block sec:authorize="isAuthenticated()"
+                      th:if="${post.writer.userId == #authentication.principal.userId}">
+                <button id="editBtn" class="btn btn-warning" onclick="toggleEditMode(true)">수정</button>
+                <button id="deleteBtn" class="btn btn-danger" onclick="deletePost()">삭제</button>
+
+                <button id="saveBtn" class="btn btn-success d-none" onclick="updatePost()">저장</button>
+                <button id="cancelBtn" class="btn btn-outline-secondary d-none" onclick="toggleEditMode(false)">취소</button>
+            </th:block>
+        </div>
+    </div>
+
+    <div class="card mb-4" sec:authorize="isAuthenticated()">
+        <div class="card-body">
+            <h6>댓글 작성</h6>
+            <div class="input-group">
+                <textarea id="mainCommentContent" class="form-control" rows="2" placeholder="댓글을 입력하세요"></textarea>
+                <button class="btn btn-outline-primary" type="button" th:onclick="submitComment([[${post.post_id}]], null)">등록</button>
+            </div>
+        </div>
+    </div>
+
+    <h5 class="mb-4 fw-bold">댓글 <span class="text-primary" th:text="${#lists.size(post.comment)}">0</span></h5>
+
+    <div th:each="c : ${post.comment}" class="mb-4">
+        <div class="card comment-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <strong th:text="${c.writer}">작성자</strong>
+                    <div>
+                        <small class="text-muted">방금 전</small>
+                        <th:block sec:authorize="isAuthenticated()">
+                            <button class="btn btn-sm text-warning ms-2 p-0"
+                                    th:onclick="|enableCommentEdit(${c.commentId})|">수정</button>
+                            <button class="btn btn-sm text-danger ms-1 p-0"
+                                    th:onclick="|deleteComment(${c.commentId})|">삭제</button>
+                        </th:block>
+                    </div>
+                </div>
+
+                <p th:id="'commentText-' + ${c.commentId}" class="mt-2 mb-2" th:text="${c.comment}">댓글 내용</p>
+
+                <div th:id="'commentEditDiv-' + ${c.commentId}" class="d-none mt-2 mb-2">
+                    <textarea th:id="'commentInput-' + ${c.commentId}" class="form-control mb-1" rows="2" th:text="${c.comment}"></textarea>
+                    <button class="btn btn-sm btn-success" th:onclick="|updateComment(${c.commentId})|">저장</button>
+                    <button class="btn btn-sm btn-secondary" th:onclick="|location.reload()|">취소</button>
+                </div>
+
+                <button class="btn btn-sm text-primary p-0"
+                        sec:authorize="isAuthenticated()"
+                        th:onclick="|toggleReplyForm(${c.commentId})|">답글 쓰기</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    function toggleReplyForm(commentId) {
+        const form = document.getElementById('replyForm-' + commentId);
+        if(form) {
+            form.classList.toggle('d-none');
+        }
+    }
+    function enableCommentEdit(commentId) {
+        document.getElementById('commentText-' + commentId).classList.add('d-none');
+        document.getElementById('commentEditDiv-' + commentId).classList.remove('d-none');
+    }
+    const post_id = [[${post.post_id}]];
+    async function submitComment(post_id, parentId) {
+        // 1. 입력 필드에서 데이터 가져오기
+        let content;
+        if (parentId === null) {
+            content = document.getElementById('mainCommentContent').value;
+        } else {
+            content = document.getElementById('replyContent-' + parentId).value;
+        }
+
+        if (!content.trim()) {
+            alert("내용을 입력해주세요.");
+            return;
+        }
+
+        // 2. 요청 데이터 구성 (DTO 구조와 일치)
+        const data = {
+            content: content,
+            parent_id: parentId
+        };
+
+        try {
+            // 3. fetch를 통한 API 호출
+            const response = await fetch(`/api/posts/${postId}/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alert("댓글이 등록되었습니다.");
+                location.reload(); // 성공 시 화면 갱신 (새로고침 없이 목록만 갱신하는 로직으로 발전 가능)
+            } else {
+                const errorMsg = await response.text();
+                alert("실패: " + errorMsg);
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("오류가 발생했습니다.");
+        }
+    }
+
+    function toggleEditMode(isEdit) {
+        const elements = {
+            display: ['displayTitle', 'displayContent', 'displayCategory', 'editBtn', 'deleteBtn'],
+            edit: ['editTitle', 'editContent', 'editCategory', 'saveBtn', 'cancelBtn']
+        };
+
+        if (isEdit) {
+            elements.display.forEach(id => document.getElementById(id).classList.add('d-none'));
+            elements.edit.forEach(id => document.getElementById(id).classList.remove('d-none'));
+        } else {
+            location.reload();
+        }
+    }
+
+    async function updatePost() {
+        const title = document.getElementById('editTitle').value;
+        const content = document.getElementById('editContent').value;
+        const categoryName = document.getElementById('editCategory').value; // 선택된 카테고리 값
+
+        if (!title.trim() || !content.trim() || !categoryName) {
+            alert("모든 필드를 채워주세요.");
+            return;
+        }
+
+        const data = {
+            title: title,
+            content: content,
+            categoryName: categoryName // 서버 DTO 필드명과 일치시키세요
+        };
+
+        try {
+            const response = await fetch(`/api/posts/${post_id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alert("수정되었습니다.");
+                location.reload();
+            } else {
+                alert("수정 권한이 없거나 오류가 발생했습니다.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    }
+
+    async function deletePost() {
+        if (!confirm("정말로 이 게시글을 삭제하시겠습니까?")) return;
+
+        try {
+            const response = await fetch(`/api/posts/${post_id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                alert("삭제되었습니다.");
+                location.href = "/view/board"; // 목록으로 리다이렉트
+            } else {
+                alert("삭제 권한이 없거나 오류가 발생했습니다.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    }
+
+    async function updateComment(commentId) {
+        const content = document.getElementById('commentInput-' + commentId).value;
+
+        if (!content.trim()) {
+            alert("내용을 입력해주세요.");
+            return;
+        }
+
+        // DTO 구조: { content: "...", parent_id: null }
+        const data = {
+            content: content,
+            parent_id: null // 수정 시에는 부모 ID가 보통 필요 없으므로 null 전달
+        };
+
+        try {
+            // 컨트롤러 경로에 맞춰 URL 수정: /api/comments/{commentId}
+            // (만약 클래스 상단 @RequestMapping이 /api/posts 라면 기존대로 가야함)
+            const response = await fetch(`/api/comments/${commentId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alert("댓글이 수정되었습니다.");
+                location.reload();
+            } else if (response.status === 403) {
+                alert("본인이 작성한 댓글만 수정할 수 있습니다.");
+            } else {
+                alert("수정 실패: " + await response.text());
+            }
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    }
+    async function deleteComment(commentId) {
+        if (!confirm("댓글을 삭제하시겠습니까?")) return;
+
+        try {
+            // URL 수정: /api/comments/{commentId}
+            const response = await fetch(`/api/comments/${commentId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                alert("댓글이 삭제되었습니다.");
+                location.reload();
+            } else if (response.status === 403) {
+                alert("본인이 작성한 댓글만 삭제할 수 있습니다.");
+            } else {
+                alert("삭제 실패");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    }
+</script>
+</body>
+</html>

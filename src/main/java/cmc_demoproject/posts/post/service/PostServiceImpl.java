@@ -1,5 +1,7 @@
 package cmc_demoproject.posts.post.service;
 
+import cmc_demoproject.posts.comment.dto.CommentResponseDTO;
+import cmc_demoproject.posts.comment.entity.Comments;
 import cmc_demoproject.posts.common.security.CustomUserDetails;
 import cmc_demoproject.posts.post.dto.PostRequestDTO;
 import cmc_demoproject.posts.post.dto.PostResponseDTO;
@@ -18,8 +20,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -82,6 +83,7 @@ public class PostServiceImpl implements PostService{
     public PostResponseDTO detailPost(Long postId) {
         Posts post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 게시글이 존재하지 않습니다"));
+        List<CommentResponseDTO> commentDTOs = convertToHierarchy(post.getComments());
         return PostResponseDTO.builder()
                 .post_id(post.getPostId())
                 .title(post.getTitle())
@@ -91,6 +93,7 @@ public class PostServiceImpl implements PostService{
                         .userName(post.getUsers().getUserName())
                         .userId(post.getUsers().getUserId())
                         .build())
+                .comment(commentDTOs)
                 .build();
     }
 
@@ -133,5 +136,66 @@ public class PostServiceImpl implements PostService{
         }
         postRepository.delete(post);
         log.info("게시글 " + post.getPostId() + "가 삭제되었습니다.");
+    }
+
+    @Override
+    public List<PostResponseDTO> findAllPosts(CustomUserDetails userDetails) {
+        List<Posts> posts = postRepository.findAll();
+        Long currentUserId = (userDetails != null && userDetails.getUser() != null)
+                ? userDetails.getUser().getUserId()
+                : null;
+        // 2. 엔티티 리스트를 DTO 리스트로 변환
+        return posts.stream()
+                .map(post -> {
+                    // 작성자 정보 DTO 생성
+                    UserResponseDTO writerDto = UserResponseDTO.builder()
+                            .userName(post.getUsers().getUserName())
+                            .userId(post.getUsers().getUserId())
+                            .build();
+                    boolean isBookmarked = false;
+                    if (currentUserId != null &&  post.getBookmarks() != null) {
+                        isBookmarked = post.getBookmarks().stream()
+                                .filter(b -> b.getUsers() != null) // 북마크한 유저 정보가 있을 때만
+                                .anyMatch(b -> b.getUsers().getUserId().equals(currentUserId));
+                    }
+                    log.info("북마크 : " +currentUserId+ isBookmarked);
+                    // 최종 게시글 응답 DTO 생성
+                    return PostResponseDTO.builder()
+                            .post_id(post.getPostId())
+                            .title(post.getTitle())
+                            .category(post.getCategories() != null ? post.getCategories().getCategoryName() : "미분류")
+                            .content(post.getContent())
+                            .writer(writerDto)
+                            .isBookmarked(isBookmarked)
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+    @Override
+    public List<CommentResponseDTO> convertToHierarchy(List<Comments> comments) {
+        Map<Long, CommentResponseDTO> map = new HashMap<>();
+        List<CommentResponseDTO> rootComments = new ArrayList<>();
+
+        // 모든 댓글을 먼저 DTO로 변환하여 Map에 저장
+        for (Comments comment : comments) {
+            CommentResponseDTO dto = CommentResponseDTO.builder()
+                    .commentId(comment.getCommentId())
+                    .comment(comment.getContent())
+                    .writer(comment.getUsers().getUserName())
+                    .children(new ArrayList<>())
+                    .build();
+            map.put(dto.getCommentId(), dto);
+
+            // 부모가 없으면 루트 리스트에 추가, 부모가 있으면 부모의 children에 추가
+            if (comment.getParent() == null) {
+                rootComments.add(dto);
+            } else {
+                CommentResponseDTO parentDto = map.get(comment.getParent().getCommentId());
+                if (parentDto != null) {
+                    parentDto.getChildren().add(dto);
+                }
+            }
+        }
+        return rootComments;
     }
 }

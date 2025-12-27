@@ -1,5 +1,7 @@
 package cmc_demoproject.posts.post.service;
 
+import cmc_demoproject.posts.comment.dto.CommentResponseDTO;
+import cmc_demoproject.posts.comment.entity.Comments;
 import cmc_demoproject.posts.common.security.CustomUserDetails;
 import cmc_demoproject.posts.post.dto.PostRequestDTO;
 import cmc_demoproject.posts.post.dto.PostResponseDTO;
@@ -13,4 +15,6 @@ public interface PostService {
     public PostResponseDTO detailPost(Long postId);
     public void editPost(Long postId, CustomUserDetails userDetails, PostRequestDTO dto);
     public void removePost(Long postId , CustomUserDetails userDetails);
+    List<PostResponseDTO> findAllPosts(CustomUserDetails userDetails);
+    List<CommentResponseDTO> convertToHierarchy(List<Comments> comments);
 }

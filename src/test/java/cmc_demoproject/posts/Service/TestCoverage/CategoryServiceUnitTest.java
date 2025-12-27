@@ -1,5 +1,6 @@
 package cmc_demoproject.posts.Service.TestCoverage;
 
+import cmc_demoproject.posts.post.dto.CategoryRequestDTO;
 import cmc_demoproject.posts.post.service.CategoryService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,12 +21,15 @@ public class CategoryServiceUnitTest {
     @DisplayName("중복된 이름의 카테고리는 추가되지 않는다")
     void addCategory_DuplicateCheck() {
         // Given
-        String catName = "IT";
-        categoryService.addCategory(catName);
+        CategoryRequestDTO dto = CategoryRequestDTO.builder()
+                .category_name("IT")
+                .build();
+
+        categoryService.addCategory(dto);
         int initialSize = categoryService.getAllCategories().size();
 
         // When: 동일 이름 추가
-        categoryService.addCategory(catName);
+        categoryService.addCategory(dto);
 
         // Then: 사이즈가 그대로인지 확인
         assertEquals(initialSize, categoryService.getAllCategories().size());

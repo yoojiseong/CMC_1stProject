@@ -36,12 +36,12 @@ public class CommentController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         }
     }
-    @PutMapping("posts/{postId}/comments")
-    public ResponseEntity<String> editComment(@PathVariable("postId") Long postId,
+    @PutMapping("/comments/{commentId}")
+    public ResponseEntity<String> editComment(@PathVariable("commentId") Long commentId,
                                              @AuthenticationPrincipal CustomUserDetails userDetails
             , @Valid @RequestBody CommentRequestDTO dto) {
         try {
-            commentService.editComment(postId , userDetails, dto );
+            commentService.editComment(commentId , userDetails, dto );
             return ResponseEntity.ok("댓글이 수정되었습니다.");
         }catch (EntityNotFoundException e) {
             // 게시글이나 유저가 없을 경우 처리
@@ -49,6 +49,19 @@ public class CommentController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
         catch(AccessDeniedException e){
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/comments/{commentId}")
+    public ResponseEntity<String> removeComment(@PathVariable("commentId") Long commentId,
+                                                @AuthenticationPrincipal CustomUserDetails userDetails){
+        try{
+            commentService.removeComment(commentId , userDetails);
+            return ResponseEntity.ok("댓글이 삭제되었습니다.");
+        }catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         }
     }

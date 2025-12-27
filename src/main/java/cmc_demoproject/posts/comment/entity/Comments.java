@@ -37,7 +37,7 @@ public class Comments {
     @JoinColumn(name = "parent_id")
     private Comments parent; // 부모 댓글
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL , orphanRemoval = true)
     private List<Comments> children = new ArrayList<>(); // 자식 댓글(대댓글)
 
     private String content;

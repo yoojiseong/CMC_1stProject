@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>새 글 작성</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">새 게시글 작성</h4>
+        </div>
+        <div class="card-body">
+          <form id="postForm">
+            <div class="mb-3">
+              <label for="categoryInput" class="form-label fw-bold">카테고리 생성</label>
+              <div class="input-group">
+                <input type="text" id="categoryInput" class="form-control" placeholder="새로운 카테고리명을 입력하세요">
+                <button class="btn btn-outline-success" type="button" onclick="createNewCategory()">카테고리 추가</button>
+              </div>
+              <small class="text-muted">팁: 원하는 카테고리가 없다면 먼저 추가 버튼을 눌러 생성하세요.</small>
+            </div>
+            <div class="mb-3">
+              <label for="categorySelect" class="form-label fw-bold">카테고리</label>
+              <select class="form-select" id="categorySelect" required>
+                <option value="">카테고리를 선택하세요</option>
+                <option th:each="cat : ${categories}"
+                        th:value="${cat.category_name}"
+                        th:text="${cat.category_name}">카테고리명</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="title" class="form-label fw-bold">제목</label>
+              <input type="text" class="form-control" id="title" placeholder="제목을 입력하세요" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="content" class="form-label fw-bold">내용</label>
+              <textarea class="form-control" id="content" rows="10" placeholder="내용을 입력하세요" required></textarea>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-secondary" onclick="history.back()">취소</button>
+              <button type="button" class="btn btn-primary" onclick="submitPost()">등록하기</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script th:inline="javascript">
+  async function createNewCategory() {
+    const categoryInput = document.getElementById('categoryInput');
+    const category_name = categoryInput.value.trim();
+
+    if (!category_name) {
+      alert("카테고리 이름을 입력해주세요.");
+      return;
+    }
+
+    // 1. 서버 DTO(CategoryRequestDTO) 구조와 일치하는 객체 생성
+    const requestData = {
+      category_name: category_name  // DTO 필드명이 categoryName인 경우
+    };
+
+    try {
+      // 2. API 호출
+      const response = await fetch('/api/categories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json' // JSON 형식임을 명시
+        },
+        body: JSON.stringify(requestData) // 반드시 문자열로 변환해서 전송!
+      });
+
+      if (response.ok) {
+        alert("카테고리가 추가되었습니다.");
+
+        // 3. 화면 UI 업데이트 (Select 박스에 추가)
+        const categorySelect = document.getElementById('categorySelect');
+        const newOption = document.createElement('option');
+        newOption.value = category_name;
+        newOption.textContent = category_name;
+        newOption.selected = true; // 새로 만든 것을 바로 선택
+        categorySelect.appendChild(newOption);
+
+        categoryInput.value = ''; // 입력창 초기화
+      } else {
+        const errorMsg = await response.text();
+        alert("카테고리 추가 실패: " + errorMsg);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("서버 통신 중 오류가 발생했습니다.");
+    }
+  }
+  async function submitPost() {
+    // 1. 입력값 읽기
+    const title = document.getElementById('title').value;
+    const category = document.getElementById('categorySelect').value;
+    const content = document.getElementById('content').value;
+
+    // 2. 유효성 검사
+    if (!category || !title.trim() || !content.trim()) {
+      alert("모든 필드를 입력해주세요.");
+      return;
+    }
+
+    // 3. 서버 DTO 구조에 맞게 데이터 구성
+    const postData = {
+      title: title,
+      category: category, // 서버 PostRequestDTO 필드명 확인 필요
+      content: content
+    };
+
+    try {
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(postData)
+      });
+
+      if (response.ok) {
+        alert("게시글이 성공적으로 등록되었습니다.");
+        location.href = "/view/board"; // 게시판 목록으로 리다이렉트
+      } else {
+        const errorText = await response.text();
+        alert("등록 실패: " + errorText);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("서ver 통신 중 오류가 발생했습니다.");
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 package cmc_demoproject.posts.post.service;
 
+import cmc_demoproject.posts.post.dto.CategoryRequestDTO;
 import cmc_demoproject.posts.post.dto.CategoryResponseDTO;
 import cmc_demoproject.posts.post.entity.Categories;
 import cmc_demoproject.posts.post.repository.CategoryRepository;
@@ -25,10 +26,10 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public void addCategory(String category_name) {
-        if(!categoryRepository.existsByCategoryName(category_name)) {
+    public void addCategory(CategoryRequestDTO dto) {
+        if(!categoryRepository.existsByCategoryName(dto.getCategory_name())) {
             Categories category = Categories.builder()
-                            .categoryName(category_name)
+                            .categoryName(dto.getCategory_name())
                                     .build();
 
             categoryRepository.save(category);

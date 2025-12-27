@@ -52,29 +52,32 @@ public class CustomSecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                         .requestMatchers("/api/auth/signup", "/api/auth/login").permitAll() // 로그인/회원가입 허용
                         // GET 요청은 모두 허용 (게시글 조회, 댓글 조회 등)
-                        .requestMatchers(HttpMethod.GET, "/api/categories/**", "/api/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/categories/**", "/api/posts/**" , "/view/signup").permitAll()
 
-                        // 댓글 작성 경로를 명시적으로 추가 (기존 posts/** 가 커버하지만, 명확성을 위해)
-                        .requestMatchers(HttpMethod.POST, "/api/posts/*/comments").hasAnyRole("ADMIN", "USER")
-
-                        // 게시글 및 카테고리 생성/수정
-                        .requestMatchers(HttpMethod.POST, "/api/categories/**", "/api/posts/**").hasAnyRole("ADMIN", "USER")
-                        .requestMatchers(HttpMethod.PUT, "/api/categories/**", "/api/posts/**","/api/posts/*/comments").hasAnyRole("ADMIN", "USER")
+//                        // 3. 수정 및 등록 권한 (구체적인 경로 우선)
+//                        .requestMatchers(HttpMethod.POST, "/api/posts/*/comments").hasAnyRole("ADMIN", "USER")
+//                        .requestMatchers(HttpMethod.PUT, "/api/comments/**").hasAnyRole("ADMIN", "USER") // 수정됨
+//                        .requestMatchers(HttpMethod.DELETE, "/api/comments/**" ).hasAnyRole("ADMIN","USER")
+//
+//                        // 4. 나머지 게시글/카테고리 관련 작업
+//                        .requestMatchers(HttpMethod.POST, "/api/categories/**", "/api/posts/**").hasAnyRole("ADMIN", "USER")
+//                        .requestMatchers(HttpMethod.PUT, "/api/categories/**", "/api/posts/**").hasAnyRole("ADMIN", "USER")
+//                        .requestMatchers(HttpMethod.DELETE, "/api/posts/**" ).hasAnyRole("ADMIN","USER")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        //.loginPage("/api/auth/login")        // 1. 인증 안되면 이 경로로 이동
+                        .loginPage("/view/login")        // 1. 인증 안되면 이 경로로 이동
                         .loginProcessingUrl("/api/auth/login") // 2. POST 로그인 처리
                         .usernameParameter("email")
                         .passwordParameter("password")
                         // 3. 로그인 성공 시 무조건 Swagger로 이동 (alwaysUse=true)
-                        .defaultSuccessUrl("/swagger-ui/index.html", true)
+                        .defaultSuccessUrl("/view/board", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout")
                         // 4. 로그아웃 후 다시 로그인 안내 페이지로 이동
-                        .logoutSuccessUrl("/api/auth/login")
+                        .logoutSuccessUrl("/view/login")
                         .invalidateHttpSession(true)
                         .clearAuthentication(true)
                         .deleteCookies("JSESSIONID")

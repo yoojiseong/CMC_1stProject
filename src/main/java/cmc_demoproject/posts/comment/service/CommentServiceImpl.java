@@ -49,14 +49,8 @@ public class CommentServiceImpl implements CommentService{
 
     @Override
     public void editComment(Long commentId, CustomUserDetails userDetails, CommentRequestDTO dto) {
-        Users user = usersRepository.findByEmail(userDetails.getEmail())
-                .orElseThrow(() -> new EntityNotFoundException("해당 이메일을 가진 사용자를 찾지 못했습니다." + userDetails.getEmail()));
-        Comments parentComment = commentsRepository.findByCommentId(dto.getParent_id())
-                .orElseThrow(() -> new EntityNotFoundException("상위 댓글을 찾을 수 없습니다."));
         Comments comment = commentsRepository.findByCommentId(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 댓글을 찾을 수 없습니다" + commentId));
-        if(parentComment==null)
-            throw new AccessDeniedException("상위 댓글이 삭제되었거나 찾을 수 엇습니다.");
         if (!comment.getUsers().getUserId().equals(userDetails.getUserId())) {
             throw new AccessDeniedException("본인이 작성한 댓글만 수정할 수 있습니다.");
         }
@@ -67,5 +61,20 @@ public class CommentServiceImpl implements CommentService{
             throw new IllegalArgumentException("댓글 내용은 비어있을 수 없습니다.");
         }
     }
+
+    @Override
+    public void removeComment(Long commentId, CustomUserDetails userDetails){
+        Users user = usersRepository.findByEmail(userDetails.getEmail())
+                .orElseThrow(() -> new EntityNotFoundException("해당 이메일을 가진 사용자를 찾지 못했습니다." + userDetails.getEmail()));
+        Comments comment = commentsRepository.findByCommentId(commentId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 댓글을 찾을 수 없습니다: " + commentId));
+        if(!comment.getUsers().getUserId().equals(userDetails.getUserId())){
+            throw new AccessDeniedException("본인이 작성한 댓글만 삭제할 수 있습니다.");
+        }
+        commentsRepository.delete(comment);
+
+        log.info("댓글 삭제 완료: ID={}", commentId);
+    }
+
 
 }

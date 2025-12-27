@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -18,10 +20,12 @@ public class UserController {
 
 
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@Valid @RequestBody RegistMemberDTO dto){
+    public ResponseEntity<String> signup(@Valid @ModelAttribute RegistMemberDTO dto){
         log.info("회원가입 진행중" + dto.getUserName());
         userService.register(dto);
-        return ResponseEntity.ok("회원가입 완료");
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create("/view/login"))
+                .build();
     }
     @PostMapping("/logout")
     public void logout(){

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <title>게시판</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .bookmark-icon {
+      cursor: pointer;
+      color: #ccc; /* 기본 색상: 회색 */
+      transition: color 0.2s ease-in-out;
+    }
+    .bookmark-icon.active {
+      color: #ffc107; /* 활성화 색상: 노란색(Bootstrap warning color) */
+    }
+    .bookmark-icon:hover {
+      transform: scale(1.2); /* 마우스 올리면 살짝 커지는 효과 */
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand" th:href="@{/view/board}">CMC Board</a>
+    <div class="navbar-nav ms-auto">
+      <span class="nav-link text-light" sec:authorize="isAuthenticated()">
+          반갑습니다, <span sec:authentication="name">사용자</span>님!
+      </span>
+      <a class="nav-link" th:href="@{/api/auth/logout}" sec:authorize="isAuthenticated()">로그아웃</a>
+      <a class="nav-link" th:href="@{/api/auth/login}" sec:authorize="isAnonymous()">로그인</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <h2>자유 게시판</h2>
+
+      <div class="dropdown">
+        <button class="btn btn-outline-secondary dropdown-toggle btn-sm" type="button" id="categoryBtn" data-bs-toggle="dropdown" aria-expanded="false">
+          전체 보기
+        </button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" href="#" onclick="filterByCategory('', '전체 보기')">전체</a></li>
+          <li><hr class="dropdown-divider"></li>
+
+          <li th:each="categoryName : ${categories}">
+            <a class="dropdown-item" href="#"
+               th:data-cat="${categoryName.category_name}"
+               onclick="handleCategoryClick(this)">
+              <span th:text="${categoryName.category_name}">카테고리명</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <a th:href="@{/view/posts/create}" class="btn btn-primary">글쓰기</a>
+  </div>
+
+  <table class="table table-hover border-top">
+    <thead class="table-light">
+    <tr>
+      <th style="width: 10%">번호</th>
+      <th style="width: 50%">제목</th>
+      <th style="width: 15%">작성자</th>
+      <th style="width: 15%">카테고리</th>
+    </tr>
+    </thead>
+    <tbody id="postTableBody">
+    <tr th:each="post : ${posts}">
+      <td th:text="${post.post_id}">1</td>
+      <td>
+        <a th:href="@{/view/posts/{id}(id=${post.post_id})}" class="text-decoration-none text-dark fw-bold">
+          <span th:text="${post.title}">게시글 제목</span>
+        </a>
+
+        <i th:class="|fa-solid fa-star bookmark-icon ms-2 ${post.isBookmarked ? 'active' : ''}|"
+           th:data-post-id="${post.post_id}"
+           onclick="toggleBookmark(this)"></i>
+      </td>
+      <td th:text="${post.writer != null ? post.writer.userName : '알 수 없음'}">작성자</td>
+      <td th:text="${post.category}">카테고리</td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script th:inline="javascript">
+  function handleCategoryClick(element) {
+    // th:data-cat에 담긴 값을 안전하게 꺼냅니다.
+    const catName = element.getAttribute('data-cat');
+    // 기존에 만드신 async 함수를 호출합니다.
+    filterByCategory(catName, catName);
+  }
+  async function filterByCategory(categoryName, displayName) {
+    const tbody = document.getElementById('postTableBody');
+    const categoryBtn = document.getElementById('categoryBtn');
+
+    // 버튼 텍스트 변경
+    categoryBtn.innerText = displayName;
+
+    try {
+      // 1. RestController API 호출
+      const response = await fetch(`/api/posts?categoryName=${categoryName}`);
+
+      if (!response.ok) {
+        throw new Error('데이터를 불러오는 데 실패했습니다.');
+      }
+
+      const posts = await response.json();
+
+      // 2. 테이블 내용 초기화
+      tbody.innerHTML = '';
+
+      // 3. 받아온 JSON 데이터로 행(row) 생성
+      if (posts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center">게시글이 없습니다.</td></tr>';
+        return;
+      }
+
+      posts.forEach(post => {
+        const writerName = post.writer ? post.writer.userName : '알 수 없음';
+        const activeClass = post.isBookmarked ? 'active' : '';
+        const row = `
+        <tr>
+          <td>${post.post_id}</td>
+          <td>
+            <a href="/view/posts/${post.post_id}" class="text-decoration-none text-dark fw-bold">
+              <span>${post.title}</span>
+            </a>
+            <i class="fa-solid fa-star bookmark-icon ms-2 ${activeClass}"
+               data-post-id="${post.post_id}"
+               onclick="toggleBookmark(this)"></i>
+          </td>
+          <td>${writerName}</td>
+          <td>${post.category}</td>
+        </tr>
+      `;
+        tbody.innerHTML += row;
+      });
+
+    } catch (error) {
+      console.error('Error:', error);
+      alert('게시글을 불러오는 중 오류가 발생했습니다.');
+    }
+  }
+  async function toggleBookmark(element) {
+    const postId = element.getAttribute('data-post-id');
+
+    try {
+      // 1. 서버의 토글 API 호출 (서버 로직이 POST 하나로 통합되어 있다면)
+      const response = await fetch(`/api/posts/${postId}/bookmarks`, {
+        method: 'POST', // DELETE를 쓰지 않고 POST로 통합
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        // 2. 서버에서 성공 응답(200 OK)이 오면 무조건 클래스를 토글합니다.
+        // active가 있으면 제거(회색), 없으면 추가(노란색)
+        element.classList.toggle('active');
+
+        // 콘솔에서 바뀐 상태 확인 (디버깅용)
+        console.log("북마크 상태가 변경되었습니다.");
+      } else if (response.status === 401 || response.status === 403) {
+        alert("로그인이 필요한 기능입니다.");
+      } else {
+        alert("처리에 실패했습니다. (상태 코드: " + response.status + ")");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("서버와 통신 중 오류가 발생했습니다.");
+    }
+  }
+
+</script>
+</body>
+</html>

@@ -25,6 +25,7 @@ public class PostsController {
     @GetMapping
     public ResponseEntity<List<PostResponseDTO>> getPostsInCategory(
             @RequestParam(value = "categoryName", required = false) String categoryName
+            ,@AuthenticationPrincipal CustomUserDetails userDetails
     ){
         log.info("게시글 목록 조회중... 카테고리 : "+categoryName);
         List<PostResponseDTO> response = postService.getPostList(categoryName);
