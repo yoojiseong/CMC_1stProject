@@ -54,7 +54,6 @@ public class CommentServiceImpl implements CommentService{
         if (!comment.getUsers().getUserId().equals(userDetails.getUserId())) {
             throw new AccessDeniedException("본인이 작성한 댓글만 수정할 수 있습니다.");
         }
-        // 4. 내용 업데이트 (변경 감지 활용)
         if (dto.getContent() != null && !dto.getContent().isBlank()) {
             comment.change(dto.getContent());
         } else {

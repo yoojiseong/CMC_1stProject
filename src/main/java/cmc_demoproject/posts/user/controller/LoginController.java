@@ -44,18 +44,17 @@ public class LoginController {
     }
     @GetMapping("/view/posts/{postId}")
     public String postDetailPage(@PathVariable Long postId, Model model) {
-        // 게시글 상세 데이터 조회 (서비스 내에서 댓글 목록도 함께 가져오도록 구현되어 있어야 함)
         PostResponseDTO post = postService.detailPost(postId);
         model.addAttribute("post", post);
 
         List<CategoryResponseDTO> categories = categoryService.getAllCategories();
         model.addAttribute("categories", categories);
-        return "post-detail"; // post-detail.html
+        return "post-detail";
     }
     @GetMapping("/view/posts/create")
     public String postCreatePage(Model model) {
         List<CategoryResponseDTO> categories = categoryService.getAllCategories();
         model.addAttribute("categories", categories);
-        return "post-create"; // post-create.html 파일을 찾아갑니다.
+        return "post-create";
     }
 }

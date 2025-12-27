@@ -28,7 +28,6 @@ public class CommentController {
             commentService.addComment(postId , dto , userDetails);
             return ResponseEntity.ok("댓글이 등록되었습니다.");
         }catch (EntityNotFoundException e) {
-            // 게시글이나 유저가 없을 경우 처리
             log.info("게시글 또는 유저가 없습니다.");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
@@ -44,7 +43,6 @@ public class CommentController {
             commentService.editComment(commentId , userDetails, dto );
             return ResponseEntity.ok("댓글이 수정되었습니다.");
         }catch (EntityNotFoundException e) {
-            // 게시글이나 유저가 없을 경우 처리
             log.info("게시글 또는 유저가 없습니다.");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }

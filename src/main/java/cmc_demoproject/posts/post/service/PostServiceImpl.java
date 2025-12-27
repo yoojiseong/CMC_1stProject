@@ -144,10 +144,8 @@ public class PostServiceImpl implements PostService{
         Long currentUserId = (userDetails != null && userDetails.getUser() != null)
                 ? userDetails.getUser().getUserId()
                 : null;
-        // 2. 엔티티 리스트를 DTO 리스트로 변환
         return posts.stream()
                 .map(post -> {
-                    // 작성자 정보 DTO 생성
                     UserResponseDTO writerDto = UserResponseDTO.builder()
                             .userName(post.getUsers().getUserName())
                             .userId(post.getUsers().getUserId())
@@ -176,7 +174,6 @@ public class PostServiceImpl implements PostService{
         Map<Long, CommentResponseDTO> map = new HashMap<>();
         List<CommentResponseDTO> rootComments = new ArrayList<>();
 
-        // 모든 댓글을 먼저 DTO로 변환하여 Map에 저장
         for (Comments comment : comments) {
             CommentResponseDTO dto = CommentResponseDTO.builder()
                     .commentId(comment.getCommentId())
@@ -186,7 +183,6 @@ public class PostServiceImpl implements PostService{
                     .build();
             map.put(dto.getCommentId(), dto);
 
-            // 부모가 없으면 루트 리스트에 추가, 부모가 있으면 부모의 children에 추가
             if (comment.getParent() == null) {
                 rootComments.add(dto);
             } else {

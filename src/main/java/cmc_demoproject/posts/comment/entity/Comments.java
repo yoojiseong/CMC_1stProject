@@ -63,7 +63,6 @@ public class Comments {
     }
     public void setParent(Comments parent) {
         this.parent = parent;
-        // 부모 댓글의 자식 리스트에 나(대댓글)를 추가하여 객체 상태를 동기화
         if (parent != null && !parent.getChildren().contains(this)) {
             parent.getChildren().add(this);
         }
